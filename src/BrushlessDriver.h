@@ -9,9 +9,9 @@ private:
     bool soft_started = false;
 
     void smoothDutyChanger() override;
-    
+
 public:
-    BrushlessDriver();
+    BrushlessDriver(int pin, int channel, int change_step, const char *name);
     ~BrushlessDriver();
 
     void setGoalDutyCycle(int goal) override;

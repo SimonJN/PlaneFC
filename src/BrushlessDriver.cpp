@@ -1,7 +1,7 @@
 #include "BrushlessDriver.h"
 
-BrushlessDriver::BrushlessDriver()
-    : MotorDriver(5, 0, 100)
+BrushlessDriver::BrushlessDriver(int pin, int channel, int change_step, const char *name)
+    : MotorDriver(pin, channel, change_step, name)
 {
 }
 
@@ -39,7 +39,7 @@ void BrushlessDriver::setGoalDutyCycle(int goal)
 void BrushlessDriver::smoothDutyChanger()
 {
     // Debug
-    Serial.print("smoothSpeedChanger running in core ");
+    Serial.print("Brushless smoothDutyChanger running in core ");
     Serial.println(xPortGetCoreID());
 
     while (1)
@@ -63,7 +63,7 @@ void BrushlessDriver::smoothDutyChanger()
                 this->current_duty_cycle += max(this->goal_duty_cycle - this->current_duty_cycle, -this->duty_cycle_change_step);
             }
             int gated_input = min(this->current_duty_cycle, 1990);
-            ledcWrite(0, this->dutyCycleToPWM(gated_input));
+            ledcWrite(this->pwm_channel, this->dutyCycleToPWM(gated_input));
             // Serial.print(current_duty_cycle);
         }
         vTaskDelay(20 / portTICK_PERIOD_MS); // Delay the task in the proper way for a number of ticks

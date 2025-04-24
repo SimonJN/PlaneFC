@@ -2,6 +2,7 @@
 #include "CRSFforArduino.hpp"
 
 #include "BrushlessDriver.h"
+#include "StepperDriver.h"
 
 #define RX2 16
 #define TX2 17
@@ -18,12 +19,14 @@ HardwareSerial s(2);
 
 BrushlessDriver *edf = nullptr;
 
+StepperDriver *left_stepper = nullptr;
+
 void setup()
 {
   Serial.begin(115200);
-  Serial.println("Fungerar");
 
-  edf = new BrushlessDriver();
+  edf = new BrushlessDriver(5, 0, 100, "edf");
+  left_stepper = new StepperDriver(18, 1, 100, "left_stepper");
 
   crsf = new CRSFforArduino(&s, TX2, RX2); // Pin names correspond to pin name on receiver
 
@@ -93,6 +96,9 @@ void onReceiveRcChannels(serialReceiverLayer::rcChannels_t *rcChannels)
 
       int goal = crsf->rcToUs(rcChannels->value[2]);
       edf->setGoalDutyCycle(goal);
+
+      int stepper_goal = crsf->rcToUs(rcChannels->value[1]);
+      left_stepper->setGoalDutyCycle(stepper_goal);
     }
   }
 }

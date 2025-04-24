@@ -1,6 +1,6 @@
 #include "MotorDriver.h"
 
-MotorDriver::MotorDriver(int change_step, int channel, int pin)
+MotorDriver::MotorDriver(int pin, int channel, int change_step, const char *name)
 {
     this->duty_cycle_change_step = change_step;
     this->pwm_channel = channel;
@@ -13,7 +13,7 @@ MotorDriver::MotorDriver(int change_step, int channel, int pin)
     // Create task to smoothly change motor speed
     xTaskCreate(
         dispatcher,                  // Task function.
-        "smoothDutyChanger",         // String with name of task.
+        name,                        // String with name of task.
         1000,                        // Stack size in bytes.
         this,                        // Parameter passed as input of the task
         1,                           // Priority of the task.
@@ -37,6 +37,12 @@ void MotorDriver::dispatcher(void *pvParameters)
 void MotorDriver::smoothDutyChanger()
 {
     Serial.println("No custom smooth duty changer defined! This function will exit without effect.");
+}
+
+void MotorDriver::setDutyMinMax(int min_duty, int max_duty)
+{
+    this->min_duty_cycle = min_duty;
+    this->max_duty_cycle = max_duty;
 }
 
 void MotorDriver::setGoalDutyCycle(int goal)
