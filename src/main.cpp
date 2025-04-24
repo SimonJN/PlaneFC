@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "CRSFforArduino.hpp"
 
-#include "MotorDriver.h"
+#include "BrushlessDriver.h"
 
 #define RX2 16
 #define TX2 17
@@ -16,12 +16,14 @@ bool soft_started = false;
 
 HardwareSerial s(2);
 
-MotorDriver edf;
+BrushlessDriver *edf = nullptr;
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("Fungerar");
+
+  edf = new BrushlessDriver();
 
   crsf = new CRSFforArduino(&s, TX2, RX2); // Pin names correspond to pin name on receiver
 
@@ -38,7 +40,7 @@ void setup()
 
   crsf->setRcChannelsCallback(onReceiveRcChannels);
 
-  Serial.print("loop() running in core ");
+  Serial.print("Main loop() running in core ");
   Serial.println(xPortGetCoreID());
 }
 
@@ -56,8 +58,8 @@ void onReceiveRcChannels(serialReceiverLayer::rcChannels_t *rcChannels)
 
     failsafe_active = rcChannels->failsafe;
     armed = crsf->rcToUs(rcChannels->value[4]) > 1500;
-    edf.setFailsafeActive(failsafe_active);
-    edf.setArmed(armed);
+    edf->setFailsafeActive(failsafe_active);
+    edf->setArmed(armed);
 
     static bool initialised = false;
     static bool lastFailSafe = false;
@@ -90,7 +92,7 @@ void onReceiveRcChannels(serialReceiverLayer::rcChannels_t *rcChannels)
       // Serial.println(">");
 
       int goal = crsf->rcToUs(rcChannels->value[2]);
-      edf.setGoalDutyCycle(goal);
+      edf->setGoalDutyCycle(goal);
     }
   }
 }
