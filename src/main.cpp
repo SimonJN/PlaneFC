@@ -3,9 +3,10 @@
 
 #include "BrushlessDriver.h"
 #include "StepperDriver.h"
+#include "BatteryManager.h"
 
-#define RX2 16
-#define TX2 17
+#define RX2 17
+#define TX2 16
 
 CRSFforArduino *crsf = nullptr;
 
@@ -20,13 +21,18 @@ HardwareSerial s(2);
 BrushlessDriver *edf = nullptr;
 
 StepperDriver *left_stepper = nullptr;
+StepperDriver *right_stepper = nullptr;
+
+BatteryManager *bm = nullptr;
 
 void setup()
 {
   Serial.begin(115200);
 
-  edf = new BrushlessDriver(5, 0, 100, "edf");
-  left_stepper = new StepperDriver(18, 1, 100, "left_stepper");
+  edf = new BrushlessDriver(13, 0, 100, "edf");
+  left_stepper = new StepperDriver(14, 1, 100, "left_stepper");
+  right_stepper = new StepperDriver(4, 1, 100, "right_stepper");
+  bm = new BatteryManager(32, "battery_manager");
 
   crsf = new CRSFforArduino(&s, TX2, RX2); // Pin names correspond to pin name on receiver
 
@@ -54,10 +60,13 @@ void loop()
 
 void onReceiveRcChannels(serialReceiverLayer::rcChannels_t *rcChannels)
 {
+  static int counter = 0;
   static unsigned long lastPrint = millis();
   if (millis() - lastPrint >= 20)
   {
     lastPrint = millis();
+
+    crsf->telemetryWriteBattery(bm->getVoltage() * 1000, 0, 0, 0);
 
     failsafe_active = rcChannels->failsafe;
     armed = crsf->rcToUs(rcChannels->value[4]) > 1500;
@@ -99,6 +108,7 @@ void onReceiveRcChannels(serialReceiverLayer::rcChannels_t *rcChannels)
 
       int stepper_goal = crsf->rcToUs(rcChannels->value[1]);
       left_stepper->setGoalDutyCycle(stepper_goal);
+      right_stepper->setGoalDutyCycle(stepper_goal);
     }
   }
 }
